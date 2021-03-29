@@ -14,8 +14,19 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
-        if (! $request->expectsJson()) {
-            return route('login');
+        $listMentionCurrent = json_decode($request->listMentionCurrent) ?? [];
+
+        foreach ($request->usersMentions as $userId) {
+            if($request->user_review == $userId || in_array($userId, $listMentionCurrent)) continue;
+
+            $info = [
+                'send_id' => Auth::id(),
+                'receive_id' => $userId,
+                'target_type' => config('model.target_type.comment'),
+                'target_id' => $request->comment_id,
+                'viewed' => config('model.viewed.false'),
+            ];
+            $this->notification->store($info);
         }
     }
 }
